@@ -2,19 +2,25 @@
 from .model import (
     Conductor,
     Diagram,
+    DrawingTable,
     ElementDefinition,
     ElementInstance,
     QetProject,
     Terminal,
     TerminalRef,
+    TextItem,
+    font_string,
 )
 
 __all__ = [
     "Conductor",
     "Diagram",
+    "DrawingTable",
     "ElementDefinition",
     "ElementInstance",
     "QetProject",
     "Terminal",
     "TerminalRef",
+    "TextItem",
+    "font_string",
 ]

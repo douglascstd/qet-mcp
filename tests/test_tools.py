@@ -146,6 +146,44 @@ class ToolChain(unittest.TestCase):
         self.assertEqual(p.diagram(0).properties.get("rev3-idx"), "")
         self.assertEqual(p.diagram(0).properties.get("doc-id"), "HC-1")
 
+    def test_text_tools(self):
+        server.tool_add_text(100, 80, "動力迴路", font_size=14, bold=True,
+                             badge_bg="#2e86de")
+        server.tool_add_text(100, 120, "備註")
+        c = server.tool_list_content()
+        self.assertEqual([t["text"] for t in c["texts"]], ["動力迴路", "備註"])
+        server.tool_set_text_style("備註", badge_border="#e74c3c",
+                                   new_text="安全備註")
+        server.tool_set_text_style("#1", badge_border="none")
+        c = server.tool_list_content()
+        self.assertEqual(c["texts"][1]["text"], "安全備註")
+        self.assertEqual(c["texts"][1]["badge_border"], "")
+        server.tool_delete_text("動力迴路")
+        self.assertEqual(len(server.tool_list_content()["texts"]), 1)
+        # 存檔驗證:badge 屬性寫進 <input>
+        from qet_xml import QetProject
+        d = QetProject.open(self.path).diagram(0)
+        self.assertEqual(d.texts[0].text, "安全備註")
+
+    def test_table_tools(self):
+        r = server.tool_add_table(200, 300, 3, 2,
+                                  data=[["名稱", "值"]], col_widths=[100, 60])
+        self.assertEqual(r["index"], 0)
+        self.assertEqual(r["width"], 160)
+        server.tool_set_table_cells(0, [[1, 0, "電壓"], [1, 1, "220V"]])
+        server.tool_set_table_style(0, r0=0, r1=0, bg="#ffdddddd",
+                                    halign="center", size=12)
+        server.tool_set_table_style(0, row_height=30)
+        c = server.tool_list_content()
+        self.assertEqual(c["tables"][0]["height"], 90)
+        from qet_xml import QetProject
+        t = QetProject.open(self.path).diagram(0).tables[0]
+        self.assertEqual(t.cells[:4], ["名稱", "值", "電壓", "220V"])
+        self.assertEqual(t.cell_bg[:2], ["#ffdddddd"] * 2)
+        self.assertEqual(t.cell_halign[0], 4)
+        server.tool_delete_table(0)
+        self.assertEqual(len(server.tool_list_content()["tables"]), 0)
+
     def test_auto_docid_numbers_per_dcc(self):
         server.tool_add_diagram()                       # folio 1
         server.tool_add_diagram()                       # folio 2

@@ -137,6 +137,46 @@ class BuildFromScratch(unittest.TestCase):
         self.assertIsNotNone(inset)
         self.assertEqual(inset.get("titleblocktemplate"), "tb_new")
 
+    def test_texts_tables_and_diagram_extras_roundtrip(self):
+        """inputs/drawing_tables 建模往返;其餘 diagram 子節點原樣保留。"""
+        import json
+        prj = QetProject.new("tt")
+        d = prj.diagram(0)
+        d.add_text(100, 80, "標題", font="osifont,12,-1,5,75,0,0,0,0,0",
+                   badge_bg="#ff2e86de")
+        t = d.add_table(200, 200, 2, 3, data=[["A", "B"], ["1"]],
+                        col_widths=[60, 90], row_height=30)
+        t.style_range(0, 0, 0, 2, bg="#ffdddddd", halign="center", size=11)
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "tt.qet"
+            prj.save(p)
+            # 模擬 GUI 另存的未建模 diagram 子節點
+            text = p.read_text(encoding="utf-8")
+            text = text.replace(
+                "</diagram>", '<shapes><shape type="line"/></shapes>'
+                "</diagram>", 1)
+            p.write_text(text, encoding="utf-8")
+
+            mid = QetProject.open(p)
+            self.assertEqual(mid.diagram(0).texts[0].text, "標題")
+            self.assertEqual(mid.diagram(0).texts[0].badge_bg, "#ff2e86de")
+            mid.save(p)
+            root = ET.parse(p).getroot()
+
+        self.assertIsNotNone(root.find("diagram/shapes/shape"))
+        inp = root.find("diagram/inputs/input")
+        self.assertEqual(inp.get("text"), "標題")
+        self.assertEqual(inp.get("badge_bg"), "#ff2e86de")
+        dt = root.find("diagram/drawing_tables/drawing_table")
+        state = json.loads(dt.get("state"))
+        self.assertEqual((state["rows"], state["cols"]), (2, 3))
+        self.assertEqual(state["cells"], ["A", "B", "", "1", "", ""])
+        self.assertEqual(state["widths"], [60, 90, 80.0])
+        self.assertEqual(state["cell_bg"][:3], ["#ffdddddd"] * 3)
+        self.assertEqual(state["cell_halign"][:4], [4, 4, 4, 1])
+        self.assertEqual(state["cell_size"][:4], [11, 11, 11, 0])
+        self.assertEqual(state["row_height"], 30)
+
     def test_terminal_lookup(self):
         defn = ElementDefinition.load(CPI)
         self.assertEqual(defn.terminal("1").uuid, CPI_TERM_1)

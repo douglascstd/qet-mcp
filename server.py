@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from qet_xml import ElementDefinition, QetProject  # noqa: E402
+from qet_xml import ElementDefinition, QetProject, font_string  # noqa: E402
 from qet_xml import index as elmt_index  # noqa: E402
 from qet_xml.model import FOLIO_A3_LANDSCAPE  # noqa: E402
 
@@ -434,7 +434,156 @@ def tool_list_content(folio: int = 0) -> dict:
                         "element2": c.element2, "terminal2": c.terminal2,
                         "num": c.props.get("num", "")}
                        for c in d.conductors],
+        "texts": [{"index": i, "x": t.x, "y": t.y, "text": t.text,
+                   "badge_bg": t.badge_bg or "",
+                   "badge_border": t.badge_border or ""}
+                  for i, t in enumerate(d.texts)],
+        "tables": [{"index": i, "x": t.x, "y": t.y,
+                    "rows": t.rows, "cols": t.cols,
+                    "width": sum(t.col_widths),
+                    "height": t.rows * t.row_height}
+                   for i, t in enumerate(d.tables)],
     }
+
+
+# --------------------------------------------------------------------------- #
+# free text & drawing tables (QET fork qet-pdm features)
+# --------------------------------------------------------------------------- #
+
+def _opt_font(font_family: str, font_size: int, bold: bool) -> "str | None":
+    if not (font_family or font_size or bold):
+        return None
+    return font_string(font_family or "osifont", font_size or 9, bold)
+
+
+def _find_text(d, ref: str):
+    if ref.startswith("#") and ref[1:].isdigit():
+        i = int(ref[1:])
+        if 0 <= i < len(d.texts):
+            return d.texts[i]
+        raise ValueError(f"text index {i} out of range (0-{len(d.texts)-1})")
+    hits = [t for t in d.texts if t.text == ref]
+    if len(hits) == 1:
+        return hits[0]
+    raise ValueError(f"{'no' if not hits else len(hits)} text items match "
+                     f"{ref!r} — use '#<index>' from qet_list_content")
+
+
+def _table(d, index: int):
+    if 0 <= index < len(d.tables):
+        return d.tables[index]
+    raise ValueError(f"table index {index} out of range "
+                     f"(0-{len(d.tables)-1})")
+
+
+def tool_add_text(x: float, y: float, text: str, folio: int = 0,
+                  font_family: str = "", font_size: int = 0,
+                  bold: bool = False, badge_bg: str = "",
+                  badge_border: str = "", rotation: float = 0) -> dict:
+    prj = _project()
+    d = prj.diagram(folio)
+    d.add_text(x, y, text, rotation=rotation,
+               font=_opt_font(font_family, font_size, bold),
+               badge_bg=badge_bg or None, badge_border=badge_border or None)
+    _save(prj)
+    return {"index": len(d.texts) - 1, "x": x, "y": y, "text": text}
+
+
+def tool_set_text_style(text: str, folio: int = 0, new_text: str = "",
+                        font_family: str = "", font_size: int = 0,
+                        bold: bool = False, badge_bg: str = "",
+                        badge_border: str = "") -> dict:
+    prj = _project()
+    d = prj.diagram(folio)
+    item = _find_text(d, text)
+    if new_text:
+        item.text = new_text
+    font = _opt_font(font_family, font_size, bold)
+    if font:
+        item.font = font
+    if badge_bg:
+        item.badge_bg = None if badge_bg == "none" else badge_bg
+    if badge_border:
+        item.badge_border = (None if badge_border == "none"
+                             else badge_border)
+    _save(prj)
+    return {"index": d.texts.index(item), "text": item.text,
+            "font": item.font or "(default)",
+            "badge_bg": item.badge_bg or "",
+            "badge_border": item.badge_border or ""}
+
+
+def tool_delete_text(text: str, folio: int = 0) -> dict:
+    prj = _project()
+    d = prj.diagram(folio)
+    item = _find_text(d, text)
+    d.texts.remove(item)
+    _save(prj)
+    return {"deleted": item.text, "remaining": len(d.texts)}
+
+
+def tool_add_table(x: float, y: float, rows: int, cols: int,
+                   folio: int = 0, data: "list | None" = None,
+                   col_widths: "list | None" = None,
+                   row_height: float = 24.0, font_family: str = "",
+                   font_size: int = 0) -> dict:
+    prj = _project()
+    d = prj.diagram(folio)
+    t = d.add_table(x, y, rows, cols, data=data, col_widths=col_widths,
+                    row_height=row_height,
+                    font=_opt_font(font_family, font_size, False))
+    _save(prj)
+    return {"index": len(d.tables) - 1, "rows": rows, "cols": cols,
+            "width": sum(t.col_widths), "height": rows * row_height}
+
+
+def tool_set_table_cells(table: int, cells: list, folio: int = 0) -> dict:
+    """cells = [[row, col, "text"], ...] (0-based)."""
+    prj = _project()
+    d = prj.diagram(folio)
+    t = _table(d, table)
+    for row, col, value in cells:
+        t.set_cell(int(row), int(col), str(value))
+    _save(prj)
+    return {"index": table, "updated": len(cells)}
+
+
+def tool_set_table_style(table: int, folio: int = 0,
+                         r0: int = 0, c0: int = 0,
+                         r1: int = -1, c1: int = -1,
+                         bg: str = "", halign: str = "", valign: str = "",
+                         size: int = 0, col_widths: "list | None" = None,
+                         row_height: float = 0) -> dict:
+    prj = _project()
+    d = prj.diagram(folio)
+    t = _table(d, table)
+    if r1 < 0:
+        r1 = t.rows - 1
+    if c1 < 0:
+        c1 = t.cols - 1
+    touched = t.style_range(
+        r0, c0, r1, c1,
+        bg=(None if not bg else "" if bg == "none" else bg),
+        halign=halign or None, valign=valign or None,
+        # size: >0 sets a per-cell font size, -1 resets to table default
+        size=(None if size == 0 else 0 if size < 0 else size))
+    if col_widths:
+        widths = [float(w) for w in col_widths][:t.cols]
+        t.col_widths = widths + t.col_widths[len(widths):]
+    if row_height:
+        t.row_height = row_height
+    _save(prj)
+    return {"index": table, "cells_styled": touched,
+            "width": sum(t.col_widths), "height": t.rows * t.row_height}
+
+
+def tool_delete_table(table: int, folio: int = 0) -> dict:
+    prj = _project()
+    d = prj.diagram(folio)
+    t = _table(d, table)
+    d.tables.remove(t)
+    _save(prj)
+    return {"deleted": table, "remaining": len(d.tables)}
 
 
 def tool_render(folio: int = 0, width: int = 1200) -> "list":
@@ -740,6 +889,7 @@ def _schema(props: dict, required: "list[str]") -> dict:
 S = {"type": "string"}
 N = {"type": "number"}
 I = {"type": "integer"}
+B = {"type": "boolean"}
 
 TOOLS = {
     "qet_new_project": (
@@ -866,9 +1016,61 @@ TOOLS = {
         "Run once all of a device's parts are placed.",
         _schema({"folio": I}, [])),
     "qet_list_content": (
-        tool_list_content, "List all element instances and conductors on a "
-        "folio of the current project.",
+        tool_list_content, "List all element instances, conductors, free "
+        "texts and drawing tables on a folio of the current project.",
         _schema({"folio": I}, [])),
+    "qet_add_text": (
+        tool_add_text, "Add a free text item to a folio. Optional styling: "
+        "font_family/font_size/bold, badge_bg (solid rounded background, "
+        "ClickUp-tag style) or badge_border (white pill with colored "
+        "outline). Colors: #rrggbb / #aarrggbb / names.",
+        _schema({"x": N, "y": N, "text": S, "folio": I, "font_family": S,
+                 "font_size": I, "bold": B, "badge_bg": S,
+                 "badge_border": S, "rotation": N}, ["x", "y", "text"])),
+    "qet_set_text_style": (
+        tool_set_text_style, "Restyle or rewrite an existing free text. "
+        "Identify it by exact current text or by '#<index>' from "
+        "qet_list_content. Empty params are left untouched; pass 'none' to "
+        "clear badge_bg/badge_border.",
+        _schema({"text": S, "folio": I, "new_text": S, "font_family": S,
+                 "font_size": I, "bold": B, "badge_bg": S,
+                 "badge_border": S}, ["text"])),
+    "qet_delete_text": (
+        tool_delete_text, "Delete a free text item (by exact text or "
+        "'#<index>').",
+        _schema({"text": S, "folio": I}, ["text"])),
+    "qet_add_table": (
+        tool_add_table, "Insert a drawing table on a folio. data = 2D "
+        "array of cell texts (row-major, may be partial); col_widths in "
+        "px (default 80), row_height default 24. Returns the table index "
+        "used by the other table tools.",
+        _schema({"x": N, "y": N, "rows": I, "cols": I, "folio": I,
+                 "data": {"type": "array",
+                          "items": {"type": "array", "items": S}},
+                 "col_widths": {"type": "array", "items": N},
+                 "row_height": N, "font_family": S, "font_size": I},
+                ["x", "y", "rows", "cols"])),
+    "qet_set_table_cells": (
+        tool_set_table_cells, "Write individual table cells: cells = "
+        "[[row, col, \"text\"], ...] (0-based).",
+        _schema({"table": I, "folio": I,
+                 "cells": {"type": "array",
+                           "items": {"type": "array",
+                                     "prefixItems": [I, I, S]}}},
+                ["table", "cells"])),
+    "qet_set_table_style": (
+        tool_set_table_style, "Style a cell range (inclusive, r1/c1=-1 → "
+        "last row/col): bg fill ('none' clears), halign "
+        "left/center/right, valign top/middle/bottom, size = per-cell "
+        "font size (-1 resets to default). Also sets table-level "
+        "col_widths / row_height.",
+        _schema({"table": I, "folio": I, "r0": I, "c0": I, "r1": I,
+                 "c1": I, "bg": S, "halign": S, "valign": S, "size": I,
+                 "col_widths": {"type": "array", "items": N},
+                 "row_height": N}, ["table"])),
+    "qet_delete_table": (
+        tool_delete_table, "Delete a drawing table by index.",
+        _schema({"table": I, "folio": I}, ["table"])),
     "qet_render": (
         tool_render, "Render a folio of the current project to an image and "
         "return it, so you can visually inspect what you have drawn.",

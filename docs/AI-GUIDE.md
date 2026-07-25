@@ -44,7 +44,7 @@ PLC I/O → 端子(&EMB)→ 佈置圖(&ELD)→ 零件清單(&EPB),共 9 頁。
 (套圖框;不帶 doc_type/doc_id 就**不會蓋掉逐頁的 DCC/識別號**)→
 `qet_set_revisions`。頁次 %folio 自動 x/總數;doc-id = PROJ-DCC-nn(見 §5.2)。
 
-## 2. 工具目錄(28 個)
+## 2. 工具目錄(35 個)
 
 | 工具 | 要點 |
 | --- | --- |
@@ -76,6 +76,13 @@ PLC I/O → 端子(&EMB)→ 佈置圖(&ELD)→ 零件清單(&EPB),共 9 頁。
 | `qet_check_iec_compliance(folio)` | 依公司 IEC 規範稽核(81346 代號/60204-1 線號顏色/連通性),回 MUST/SHOULD findings |
 | `qet_generate_bom(all_folios, folio)` | 物料表:依代號分組(交互參照共代號者算一台) |
 | `qet_import_dxf(dxf_path, name, category, name_en, filename, pin_layer, scale)` | DXF→.elmt 存進公司元件庫;幾何完整重現;端子讀自 `pin` 圖層;多圖塊(BLOCK)自動一顆一顆拆(見 §9) |
+| `qet_add_text(x, y, text, font_family, font_size, bold, badge_bg, badge_border, rotation, folio)` | 自由文字;`badge_bg`=實心圓角底(標籤風)、`badge_border`=白底彩框 pill,擇一;顏色 #rrggbb/#aarrggbb;不給字型參數則用 QET 預設(fork:英數 osifont/中文源樣黑體) |
+| `qet_set_text_style(text, new_text, font_family, font_size, bold, badge_bg, badge_border, folio)` | 改既有文字內容/樣式;text 用原文或 `#<index>`(qet_list_content 查);空參數不動,badge 傳 `"none"` 清除 |
+| `qet_delete_text(text, folio)` | 刪自由文字 |
+| `qet_add_table(x, y, rows, cols, data, col_widths, row_height, font_family, font_size, folio)` | 插入繪圖表格;data=2D 文字陣列(可部分);欄寬預設 80px、列高 24;回傳 index 供後續工具用 |
+| `qet_set_table_cells(table, cells, folio)` | 逐格填字:cells=`[[row, col, "text"], …]`(0-based) |
+| `qet_set_table_style(table, r0, c0, r1, c1, bg, halign, valign, size, col_widths, row_height, folio)` | 範圍樣式(含界,r1/c1=-1 到底):bg 底色(`"none"` 清)、halign left/center/right、valign top/middle/bottom、size 逐格字級(-1 還原);col_widths/row_height 是表級 |
+| `qet_delete_table(table, folio)` | 刪表格(以 index) |
 
 **收尾流程**:畫完電路 → `qet_apply_titleblock(...)` 套圖框 →
 `qet_check_iec_compliance()` 稽核(修掉 MUST)→ `qet_render` 目視 →
@@ -200,6 +207,13 @@ PLC I/O → 端子(&EMB)→ 佈置圖(&ELD)→ 零件清單(&EPB),共 9 頁。
   設定。已修:extra_root_children 原樣保留+embed_titleblock 連動
   newdiagrams/inset;有回歸測試。**存檔後仍應比對根節點清單**,
   發現遺失就以 git 歷史版本為基準做純文字手術,不要硬用 qet_xml 重存。
+- **表格/文字為 qet-pdm fork 功能(2026-07-26 起 MCP 支援)**:`<inputs>`
+  與 `<drawing_tables>` 已進 qet_xml 物件模型(TextItem/DrawingTable,
+  Diagram.add_text/add_table);表格整張存在 `state` JSON 屬性
+  (diagramtableitem.cpp),對齊值是 Qt::Alignment 整數(left=1/right=2/
+  center=4;top=32/bottom=64/middle=128)。其餘未建模的 diagram 子節點
+  (shapes/images/舊 tables…)open→save 一律原樣保留(diagram 層的
+  extra_children,與 2026-07-08 專案層事故同對策)。
 - **改了 server.py 要使用者在 /mcp reconnect(或重啟 Claude Code)才生效**;
   qet_xml 的修改則腳本立即可用(server 內建索引/資料快取除外)。
 - 檔案優先:MCP 工具每次呼叫 open→mutate→save;GUI 不會自動 reload,
@@ -237,6 +251,15 @@ PLC I/O → 端子(&EMB)→ 佈置圖(&ELD)→ 零件清單(&EPB),共 9 頁。
     匯出成一堆線、多個零件並排的圖。間隙門檻預設為圖面較長邊的 3%。
   - `split="none"`:強制整張=一顆。
   - 回傳 `mode`(`blocks`/`clusters`/`single`)、`count`、`elements[]`。
+- **INSERT/HATCH 已支援(2026-07-15)**:INSERT(圖塊參照)遞迴攤平、
+  HATCH 取邊界路徑轉 polygon(廠商 DXF 常把整個外形畫在圖塊裡或全用
+  HATCH 畫,舊版會轉出近乎空白的元件)。SPLINE 本來就走 make_path 可轉。
+- **陷阱:廠商 DXF 不一定 1:1**(2026-07-15 實戰,0715 批次 89 顆中 5 顆):
+  工具把 DXF 座標當 mm、無從得知繪圖比例,10:1 的圖會轉出 10 倍大元件
+  (例:閎凱 HG-40TBC 畫成 1130mm,實品 113mm)。轉完**必掃尺寸**
+  (elmt width/height ÷4 = mm,最大邊 >400mm 即可疑),確認實品尺寸後用
+  `scale=4/比例` 重轉(10:1 → scale=0.4)。另注意雜散微小實體會撐大
+  bbox、把 hotspot 拉偏(主體圖形佔 bbox 面積比 <35% 即可疑)。
 - **輸出位置**:預設 `elements-company/<category>/<filename>.elmt`
   (category 預設 `control`,filename 預設 DXF 檔名;block 模式檔名取自圖塊名)。
   存完提醒使用者在 QET **重新整理元件面板**才看得到。

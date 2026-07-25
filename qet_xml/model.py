@@ -10,6 +10,7 @@ Grounded in docs/qet-xml-schema.md (M0). Key format facts relied upon:
 from __future__ import annotations
 
 import copy
+import json
 import uuid as _uuid
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
@@ -208,6 +209,148 @@ class Conductor:
         return e
 
 
+# --------------------------------------------------------------------------- #
+# Free text and drawing table (QET fork qet-pdm additions)
+# --------------------------------------------------------------------------- #
+
+def font_string(family: str, size: int, bold: bool = False) -> str:
+    """QFont::toString() 10-field legacy form — Qt6 fromString accepts it."""
+    return f"{family},{size},-1,5,{75 if bold else 50},0,0,0,0,0"
+
+
+class TextItem:
+    """Independent diagram text (<input> under <inputs>). Styling per the
+    fork: optional font override, badge_bg (solid rounded background) or
+    badge_border (white pill with colored outline). Colors are any form
+    QColor parses (#rrggbb / #aarrggbb / names)."""
+
+    def __init__(self, x: float, y: float, text: str, rotation: float = 0,
+                 font: str | None = None, badge_bg: str | None = None,
+                 badge_border: str | None = None):
+        self.x, self.y, self.text, self.rotation = x, y, text, rotation
+        self.font = font                     # None = QET default
+        self.badge_bg = badge_bg
+        self.badge_border = badge_border
+
+    @classmethod
+    def from_xml(cls, dom: ET.Element) -> "TextItem":
+        return cls(float(dom.get("x", "0")), float(dom.get("y", "0")),
+                   dom.get("text", ""),
+                   rotation=float(dom.get("rotation", "0")),
+                   font=dom.get("font"), badge_bg=dom.get("badge_bg"),
+                   badge_border=dom.get("badge_border"))
+
+    def to_xml(self) -> ET.Element:
+        attrs = {"x": _num(self.x), "y": _num(self.y), "text": self.text,
+                 "rotation": _num(self.rotation)}
+        if self.font:
+            attrs["font"] = self.font
+        if self.badge_bg:
+            attrs["badge_bg"] = self.badge_bg
+        if self.badge_border:
+            attrs["badge_border"] = self.badge_border
+        return ET.Element("input", attrs)
+
+
+class DrawingTable:
+    """Drawing table (<drawing_table> under <drawing_tables>); the whole
+    table lives in the JSON `state` attribute (diagramtableitem.cpp).
+    Cell arrays are row-major; cell_bg entries are HexArgb or "" (no
+    fill); halign/valign are Qt::Alignment ints; cell_size 0 = default."""
+
+    HALIGN = {"left": 0x1, "right": 0x2, "center": 0x4}
+    VALIGN = {"top": 0x20, "bottom": 0x40, "middle": 0x80}
+
+    def __init__(self, x: float, y: float, rows: int, cols: int,
+                 data: "list[list[str]] | None" = None,
+                 col_widths: "list[float] | None" = None,
+                 row_height: float = 24.0, font: str | None = None,
+                 z: float = 0):
+        self.x, self.y, self.z = x, y, z
+        self.rows, self.cols = rows, cols
+        self.row_height = row_height
+        self.font = font                     # None = QET default
+        self.col_widths = list(col_widths or [])[:cols]
+        self.col_widths += [80.0] * (cols - len(self.col_widths))
+        n = rows * cols
+        self.cells = [""] * n
+        for r, row in enumerate(data or []):
+            for c, value in enumerate(row):
+                if r < rows and c < cols:
+                    self.cells[r * cols + c] = str(value)
+        self.cell_bg = [""] * n
+        self.cell_halign = [self.HALIGN["left"]] * n
+        self.cell_valign = [self.VALIGN["middle"]] * n
+        self.cell_size = [0] * n
+
+    def set_cell(self, row: int, col: int, text: str) -> None:
+        if not (0 <= row < self.rows and 0 <= col < self.cols):
+            raise IndexError(f"cell ({row},{col}) outside "
+                             f"{self.rows}x{self.cols} table")
+        self.cells[row * self.cols + col] = text
+
+    def style_range(self, r0: int, c0: int, r1: int, c1: int,
+                    bg: str | None = None, halign: str | None = None,
+                    valign: str | None = None,
+                    size: int | None = None) -> int:
+        """Style every cell in the inclusive range; returns cell count.
+        bg "" clears the fill; halign/valign take left/center/right and
+        top/middle/bottom; size 0 restores the default font size."""
+        touched = 0
+        for r in range(max(0, r0), min(self.rows - 1, r1) + 1):
+            for c in range(max(0, c0), min(self.cols - 1, c1) + 1):
+                i = r * self.cols + c
+                if bg is not None:
+                    self.cell_bg[i] = bg
+                if halign is not None:
+                    self.cell_halign[i] = self.HALIGN[halign]
+                if valign is not None:
+                    self.cell_valign[i] = self.VALIGN[valign]
+                if size is not None:
+                    self.cell_size[i] = size
+                touched += 1
+        return touched
+
+    @classmethod
+    def from_xml(cls, dom: ET.Element) -> "DrawingTable":
+        state = json.loads(dom.get("state", "{}") or "{}")
+        rows = int(state.get("rows", 1))
+        cols = int(state.get("cols", 1))
+        t = cls(float(dom.get("x", "0")), float(dom.get("y", "0")),
+                rows, cols,
+                col_widths=[float(w) for w in state.get("widths", [])],
+                row_height=float(state.get("row_height", 24)),
+                font=state.get("font"),
+                z=float(dom.get("z", "0")))
+        n = rows * cols
+
+        def _fill(target: list, values: list, cast) -> None:
+            for i, v in enumerate(values[:n]):
+                target[i] = cast(v)
+        _fill(t.cells, state.get("cells", []), str)
+        _fill(t.cell_bg, state.get("cell_bg", []), str)
+        _fill(t.cell_halign, state.get("cell_halign", []), int)
+        _fill(t.cell_valign, state.get("cell_valign", []), int)
+        _fill(t.cell_size, state.get("cell_size", []), int)
+        return t
+
+    def to_xml(self) -> ET.Element:
+        state = {"rows": self.rows, "cols": self.cols,
+                 "row_height": self.row_height,
+                 "widths": self.col_widths, "cells": self.cells,
+                 "cell_bg": self.cell_bg,
+                 "cell_halign": self.cell_halign,
+                 "cell_valign": self.cell_valign,
+                 "cell_size": self.cell_size}
+        if self.font:
+            state["font"] = self.font
+        return ET.Element("drawing_table", {
+            "x": _num(self.x), "y": _num(self.y), "z": _num(self.z),
+            "state": json.dumps(state, ensure_ascii=False,
+                                separators=(",", ":")),
+        })
+
+
 class Diagram:
     ATTR_DEFAULTS = {
         "cols": "17", "colsize": "60", "rows": "8", "rowsize": "80",
@@ -220,9 +363,14 @@ class Diagram:
         self.attrs = {**self.ATTR_DEFAULTS, **(attrs or {}), "title": title}
         self.elements: list[ElementInstance] = []
         self.conductors: list[Conductor] = []
+        self.texts: list[TextItem] = []
+        self.tables: list[DrawingTable] = []
         # custom titleblock variables (%{key} in templates), serialized as
         # the diagram's <properties> child (titleblockproperties.cpp:96)
         self.properties: dict[str, str] = {}
+        # diagram children we do not model (shapes, images, legacy tables…)
+        # — preserved verbatim on save, same policy as extra_root_children
+        self.extra_children: list[ET.Element] = []
 
     # -- authoring API ------------------------------------------------------
     def place_element(self, elmt: str | Path | ElementDefinition, x: float,
@@ -249,6 +397,24 @@ class Diagram:
             entry = revisions[i - 1] if i <= len(revisions) else {}
             for key in self.REVISION_FIELDS:
                 self.properties[f"rev{i}-{key}"] = str(entry.get(key, ""))
+
+    def add_text(self, x: float, y: float, text: str, rotation: float = 0,
+                 font: str | None = None, badge_bg: str | None = None,
+                 badge_border: str | None = None) -> TextItem:
+        item = TextItem(x, y, text, rotation, font, badge_bg, badge_border)
+        self.texts.append(item)
+        return item
+
+    def add_table(self, x: float, y: float, rows: int, cols: int,
+                  data: "list[list[str]] | None" = None,
+                  col_widths: "list[float] | None" = None,
+                  row_height: float = 24.0,
+                  font: str | None = None) -> DrawingTable:
+        table = DrawingTable(x, y, rows, cols, data=data,
+                             col_widths=col_widths, row_height=row_height,
+                             font=font)
+        self.tables.append(table)
+        return table
 
     def connect(self, t1: TerminalRef, t2: TerminalRef,
                 path: "list[tuple[str, float]] | None" = None,
@@ -318,6 +484,16 @@ class Diagram:
         conductors = ET.SubElement(d, "conductors")
         for c in self.conductors:
             conductors.append(c.to_xml())
+        if self.texts:
+            inputs = ET.SubElement(d, "inputs")
+            for t in self.texts:
+                inputs.append(t.to_xml())
+        if self.tables:
+            dtables = ET.SubElement(d, "drawing_tables")
+            for t in self.tables:
+                dtables.append(t.to_xml())
+        for extra in self.extra_children:
+            d.append(copy.deepcopy(extra))
         return d
 
 
@@ -453,6 +629,22 @@ class QetProject:
                                    if dtexts is not None else None),
                 links=[u for u in links if u],
             ))
+
+        inputs = ddom.find("inputs")
+        for tdom in ([] if inputs is None else inputs.findall("input")):
+            d.texts.append(TextItem.from_xml(tdom))
+
+        dtables = ddom.find("drawing_tables")
+        for tdom in ([] if dtables is None
+                     else dtables.findall("drawing_table")):
+            d.tables.append(DrawingTable.from_xml(tdom))
+
+        # keep everything else (shapes, images, legacy tables…) verbatim —
+        # dropping unmodelled nodes destroyed project data once (2026-07-08)
+        modelled = {"properties", "elements", "conductors", "inputs",
+                    "drawing_tables"}
+        d.extra_children = [copy.deepcopy(child) for child in ddom
+                            if child.tag not in modelled]
 
         conductors = ddom.find("conductors")
         for cdom in ([] if conductors is None else conductors.findall("conductor")):
