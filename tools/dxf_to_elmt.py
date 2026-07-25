@@ -32,15 +32,38 @@ def _style(line_weight="thin"):
 FONT = "Sans Serif,9,-1,5,50,0,0,0,0,0"
 
 
+def _expand_inserts(entities):
+    """Yield entities with INSERT (block references) recursively exploded
+    into transformed virtual copies — vendor DXFs often keep the whole
+    drawing inside blocks, which make_path() cannot handle directly."""
+    for e in entities:
+        if e.dxftype() == "INSERT":
+            try:
+                yield from _expand_inserts(e.virtual_entities())
+            except Exception:
+                pass
+        else:
+            yield e
+
+
 def load_polylines(msp, skip_layer=None):
     """Every entity as a flattened list of (x, y) points + closed flag.
     Entities on `skip_layer` (the terminal layer) are ignored."""
     polys, ellipses = [], []
-    for e in msp:
+    for e in _expand_inserts(msp):
         if skip_layer and e.dxf.layer == skip_layer:
             continue
         t = e.dxftype()
         try:
+            if t == "HATCH":
+                # some CADs draw entire outlines as hatches; keep each
+                # boundary path (fills themselves are not representable)
+                for sub in ezpath.from_hatch(e):
+                    pts = [(round(v.x, 3), round(v.y, 3))
+                           for v in sub.flattening(0.25)]
+                    if len(pts) >= 2:
+                        polys.append((pts, True))
+                continue
             if t == "ELLIPSE" and abs(e.dxf.major_axis[1]) < 1e-6:
                 # axis-aligned ellipse → keep as a true QET ellipse
                 cx, cy = e.dxf.center.x, e.dxf.center.y
@@ -76,7 +99,7 @@ def terminals_from_layer(msp, layer="pin"):
     """Terminals from a dedicated layer. POINT → its location, CIRCLE →
     centre, short LINE → both ends. Each is named by the nearest TEXT."""
     pts = []
-    for e in msp:
+    for e in _expand_inserts(msp):
         if e.dxf.layer != layer:
             continue
         t = e.dxftype()
