@@ -44,7 +44,7 @@ PLC I/O → 端子(&EMB)→ 佈置圖(&ELD)→ 零件清單(&EPB),共 9 頁。
 (套圖框;不帶 doc_type/doc_id 就**不會蓋掉逐頁的 DCC/識別號**)→
 `qet_set_revisions`。頁次 %folio 自動 x/總數;doc-id = PROJ-DCC-nn(見 §5.2)。
 
-## 2. 工具目錄(35 個)
+## 2. 工具目錄(39 個)
 
 | 工具 | 要點 |
 | --- | --- |
@@ -83,6 +83,10 @@ PLC I/O → 端子(&EMB)→ 佈置圖(&ELD)→ 零件清單(&EPB),共 9 頁。
 | `qet_set_table_cells(table, cells, folio)` | 逐格填字:cells=`[[row, col, "text"], …]`(0-based) |
 | `qet_set_table_style(table, r0, c0, r1, c1, bg, halign, valign, size, col_widths, row_height, folio)` | 範圍樣式(含界,r1/c1=-1 到底):bg 底色(`"none"` 清)、halign left/center/right、valign top/middle/bottom、size 逐格字級(-1 還原);col_widths/row_height 是表級 |
 | `qet_delete_table(table, folio)` | 刪表格(以 index) |
+| `qet_merge_table_cells(table, r0, c0, r1, c1, folio)` | Excel 式合併儲存格(含界範圍併成一格,錨點=左上;被覆蓋格資料保留) |
+| `qet_unmerge_table_cells(table, r0, c0, r1, c1, folio)` | 拆開與範圍相交的合併(預設整表) |
+| `qet_group_items(members, folio)` | 群組(QET 端選一個=選整組、一起移動):members 用元件 label/uuid、`text:#i` 或 `text:內容`、`table:i`,至少兩個 |
+| `qet_ungroup_items(member, folio)` | 解散含該成員的群組 |
 
 **收尾流程**:畫完電路 → `qet_apply_titleblock(...)` 套圖框 →
 `qet_check_iec_compliance()` 稽核(修掉 MUST)→ `qet_render` 目視 →
@@ -207,6 +211,11 @@ PLC I/O → 端子(&EMB)→ 佈置圖(&ELD)→ 零件清單(&EPB),共 9 頁。
   設定。已修:extra_root_children 原樣保留+embed_titleblock 連動
   newdiagrams/inset;有回歸測試。**存檔後仍應比對根節點清單**,
   發現遺失就以 git 歷史版本為基準做純文字手術,不要硬用 qet_xml 重存。
+- **QET 2.6.x 新欄位(2026-07-26)**:表格 state JSON 的 `spans`
+  (合併儲存格 [列,欄,跨列,跨欄])、文字/表格 XML 的 `uuid` 屬性、
+  diagram 層 `<element_groups>`(群組)都已進 qet_xml 模型——
+  **舊版 qet_xml 重存會把這些整批丟掉**(合併消失/群組斷鏈),
+  處理含這些欄位的檔案務必用新版。
 - **表格/文字為 qet-pdm fork 功能(2026-07-26 起 MCP 支援)**:`<inputs>`
   與 `<drawing_tables>` 已進 qet_xml 物件模型(TextItem/DrawingTable,
   Diagram.add_text/add_table);表格整張存在 `state` JSON 屬性

@@ -441,8 +441,10 @@ def tool_list_content(folio: int = 0) -> dict:
         "tables": [{"index": i, "x": t.x, "y": t.y,
                     "rows": t.rows, "cols": t.cols,
                     "width": sum(t.col_widths),
-                    "height": t.rows * t.row_height}
+                    "height": t.rows * t.row_height,
+                    "spans": t.spans}
                    for i, t in enumerate(d.tables)],
+        "groups": [sorted(g) for g in d.groups],
     }
 
 
@@ -584,6 +586,58 @@ def tool_delete_table(table: int, folio: int = 0) -> dict:
     d.tables.remove(t)
     _save(prj)
     return {"deleted": table, "remaining": len(d.tables)}
+
+
+def tool_merge_table_cells(table: int, r0: int, c0: int, r1: int, c1: int,
+                           folio: int = 0) -> dict:
+    prj = _project()
+    d = prj.diagram(folio)
+    t = _table(d, table)
+    t.merge_cells(r0, c0, r1, c1)
+    _save(prj)
+    return {"table": table, "spans": t.spans}
+
+
+def tool_unmerge_table_cells(table: int, r0: int = 0, c0: int = 0,
+                             r1: int = -1, c1: int = -1,
+                             folio: int = 0) -> dict:
+    prj = _project()
+    d = prj.diagram(folio)
+    t = _table(d, table)
+    removed = t.unmerge_cells(r0, c0,
+                              t.rows - 1 if r1 < 0 else r1,
+                              t.cols - 1 if c1 < 0 else c1)
+    _save(prj)
+    return {"table": table, "removed": removed, "spans": t.spans}
+
+
+def _resolve_group_ref(d, ref: str) -> str:
+    """群組成員參照 → uuid:元件用 label/uuid;文字用 'text:#i' 或
+    'text:內容';表格用 'table:i'。"""
+    if ref.startswith("text:"):
+        return _find_text(d, ref[5:]).uuid
+    if ref.startswith("table:"):
+        return _table(d, int(ref[6:])).uuid
+    return _find_instance(d, ref).uuid
+
+
+def tool_group_items(members: list, folio: int = 0) -> dict:
+    """把元件/文字/表格群組:QET 端選一個=選整組、一起移動。"""
+    prj = _project()
+    d = prj.diagram(folio)
+    ids = [_resolve_group_ref(d, str(m)) for m in members]
+    group = d.group_items(ids)
+    _save(prj)
+    return {"grouped": len(group), "groups": len(d.groups)}
+
+
+def tool_ungroup_items(member: str, folio: int = 0) -> dict:
+    """解散含指定成員的群組(成員參照同 qet_group_items)。"""
+    prj = _project()
+    d = prj.diagram(folio)
+    removed = d.ungroup_items([_resolve_group_ref(d, member)])
+    _save(prj)
+    return {"removed_groups": removed, "groups": len(d.groups)}
 
 
 def tool_render(folio: int = 0, width: int = 1200) -> "list":
@@ -1071,6 +1125,28 @@ TOOLS = {
     "qet_delete_table": (
         tool_delete_table, "Delete a drawing table by index.",
         _schema({"table": I, "folio": I}, ["table"])),
+    "qet_merge_table_cells": (
+        tool_merge_table_cells, "Excel-style cell merge: merge the "
+        "inclusive range r0,c0..r1,c1 into one cell (anchor = top-left; "
+        "covered cells keep their data, unmerge restores it).",
+        _schema({"table": I, "r0": I, "c0": I, "r1": I, "c1": I,
+                 "folio": I}, ["table", "r0", "c0", "r1", "c1"])),
+    "qet_unmerge_table_cells": (
+        tool_unmerge_table_cells, "Split merged cells intersecting the "
+        "range (defaults to the whole table).",
+        _schema({"table": I, "r0": I, "c0": I, "r1": I, "c1": I,
+                 "folio": I}, ["table"])),
+    "qet_group_items": (
+        tool_group_items, "Group items so QET treats them as one unit "
+        "(select one = select all, move together). members: element "
+        "label/uuid, 'text:#<index>' or 'text:<exact text>', "
+        "'table:<index>'. Needs >= 2 members.",
+        _schema({"members": {"type": "array", "items": S}, "folio": I},
+                ["members"])),
+    "qet_ungroup_items": (
+        tool_ungroup_items, "Dissolve the group(s) containing the given "
+        "member (same reference forms as qet_group_items).",
+        _schema({"member": S, "folio": I}, ["member"])),
     "qet_render": (
         tool_render, "Render a folio of the current project to an image and "
         "return it, so you can visually inspect what you have drawn.",

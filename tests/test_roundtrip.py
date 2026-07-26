@@ -177,6 +177,41 @@ class BuildFromScratch(unittest.TestCase):
         self.assertEqual(state["cell_size"][:4], [11, 11, 11, 0])
         self.assertEqual(state["row_height"], 30)
 
+    def test_spans_uuid_groups_roundtrip(self):
+        """QET 2.6.x 新欄位:合併儲存格 spans、文字/表格 uuid、
+        element_groups 群組——open/save 必須原樣保留(防資料流失)。"""
+        import json
+        prj = QetProject.new("g")
+        d = prj.diagram(0)
+        t1 = d.add_text(100, 80, "甲")
+        t2 = d.add_text(100, 120, "乙")
+        tb = d.add_table(200, 200, 3, 3)
+        tb.merge_cells(0, 0, 0, 2)          # 表頭跨 3 欄
+        d.group_items([t1.uuid, t2.uuid, tb.uuid])
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "g.qet"
+            prj.save(p)
+            mid = QetProject.open(p)
+            # 保留:uuid 不變、spans 不變、群組不變
+            md = mid.diagram(0)
+            self.assertEqual(md.texts[0].uuid, t1.uuid)
+            self.assertEqual(md.tables[0].uuid, tb.uuid)
+            self.assertEqual(md.tables[0].spans, [[0, 0, 1, 3]])
+            self.assertEqual(md.groups, [{t1.uuid, t2.uuid, tb.uuid}])
+            mid.save(p)
+            root = ET.parse(p).getroot()
+            state = json.loads(root.find(
+                "diagram/drawing_tables/drawing_table").get("state"))
+            self.assertEqual(state["spans"], [[0, 0, 1, 3]])
+            g = root.find("diagram/element_groups/group")
+            self.assertEqual(set(g.get("uuids").split(";")),
+                             {t1.uuid, t2.uuid, tb.uuid})
+            # 取消合併 + 解散群組
+            md = QetProject.open(p).diagram(0)
+            self.assertEqual(md.tables[0].unmerge_cells(0, 0, 2, 2), 1)
+            self.assertEqual(md.ungroup_items([t1.uuid]), 1)
+            self.assertEqual(md.groups, [])
+
     def test_terminal_lookup(self):
         defn = ElementDefinition.load(CPI)
         self.assertEqual(defn.terminal("1").uuid, CPI_TERM_1)

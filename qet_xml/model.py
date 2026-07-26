@@ -226,11 +226,14 @@ class TextItem:
 
     def __init__(self, x: float, y: float, text: str, rotation: float = 0,
                  font: str | None = None, badge_bg: str | None = None,
-                 badge_border: str | None = None):
+                 badge_border: str | None = None,
+                 uuid: str | None = None):
         self.x, self.y, self.text, self.rotation = x, y, text, rotation
         self.font = font                     # None = QET default
         self.badge_bg = badge_bg
         self.badge_border = badge_border
+        # 供群組(element_groups)識別;QET 端格式含大括號
+        self.uuid = uuid or ("{%s}" % _uuid.uuid4())
 
     @classmethod
     def from_xml(cls, dom: ET.Element) -> "TextItem":
@@ -238,11 +241,12 @@ class TextItem:
                    dom.get("text", ""),
                    rotation=float(dom.get("rotation", "0")),
                    font=dom.get("font"), badge_bg=dom.get("badge_bg"),
-                   badge_border=dom.get("badge_border"))
+                   badge_border=dom.get("badge_border"),
+                   uuid=dom.get("uuid"))
 
     def to_xml(self) -> ET.Element:
         attrs = {"x": _num(self.x), "y": _num(self.y), "text": self.text,
-                 "rotation": _num(self.rotation)}
+                 "rotation": _num(self.rotation), "uuid": self.uuid}
         if self.font:
             attrs["font"] = self.font
         if self.badge_bg:
@@ -265,8 +269,11 @@ class DrawingTable:
                  data: "list[list[str]] | None" = None,
                  col_widths: "list[float] | None" = None,
                  row_height: float = 24.0, font: str | None = None,
-                 z: float = 0):
+                 z: float = 0, uuid: str | None = None):
         self.x, self.y, self.z = x, y, z
+        self.uuid = uuid or ("{%s}" % _uuid.uuid4())
+        # 合併儲存格:[列, 欄, 跨列, 跨欄](0-based,同 QET state JSON)
+        self.spans: "list[list[int]]" = []
         self.rows, self.cols = rows, cols
         self.row_height = row_height
         self.font = font                     # None = QET default
@@ -311,6 +318,27 @@ class DrawingTable:
                 touched += 1
         return touched
 
+    def merge_cells(self, r0: int, c0: int, r1: int, c1: int) -> None:
+        """Excel 式合併:範圍(含界)併成一格,錨點=左上;範圍內既有
+        合併先移除。被覆蓋格資料保留(QET 取消合併會重現)。"""
+        r0, r1 = sorted((max(0, r0), min(self.rows - 1, r1)))
+        c0, c1 = sorted((max(0, c0), min(self.cols - 1, c1)))
+        if r0 == r1 and c0 == c1:
+            raise ValueError("merge needs at least two cells")
+        region = [r0, c0, r1 - r0 + 1, c1 - c0 + 1]
+        self.unmerge_cells(r0, c0, r1, c1)
+        self.spans.append(region)
+
+    def unmerge_cells(self, r0: int, c0: int, r1: int, c1: int) -> int:
+        """拆開與範圍相交的合併;回傳拆掉的個數。"""
+        def hits(sp):
+            sr, sc, srn, scn = sp
+            return not (sr + srn - 1 < r0 or sr > r1
+                        or sc + scn - 1 < c0 or sc > c1)
+        before = len(self.spans)
+        self.spans = [sp for sp in self.spans if not hits(sp)]
+        return before - len(self.spans)
+
     @classmethod
     def from_xml(cls, dom: ET.Element) -> "DrawingTable":
         state = json.loads(dom.get("state", "{}") or "{}")
@@ -321,7 +349,10 @@ class DrawingTable:
                 col_widths=[float(w) for w in state.get("widths", [])],
                 row_height=float(state.get("row_height", 24)),
                 font=state.get("font"),
-                z=float(dom.get("z", "0")))
+                z=float(dom.get("z", "0")),
+                uuid=dom.get("uuid"))
+        t.spans = [[int(v) for v in sp]
+                   for sp in state.get("spans", []) if len(sp) == 4]
         n = rows * cols
 
         def _fill(target: list, values: list, cast) -> None:
@@ -344,7 +375,10 @@ class DrawingTable:
                  "cell_size": self.cell_size}
         if self.font:
             state["font"] = self.font
+        if self.spans:
+            state["spans"] = self.spans
         return ET.Element("drawing_table", {
+            "uuid": self.uuid,
             "x": _num(self.x), "y": _num(self.y), "z": _num(self.z),
             "state": json.dumps(state, ensure_ascii=False,
                                 separators=(",", ":")),
@@ -365,6 +399,8 @@ class Diagram:
         self.conductors: list[Conductor] = []
         self.texts: list[TextItem] = []
         self.tables: list[DrawingTable] = []
+        # 群組(每組 = uuid 字串集合;可含元件/文字/形狀/圖片/表格)
+        self.groups: "list[set[str]]" = []
         # custom titleblock variables (%{key} in templates), serialized as
         # the diagram's <properties> child (titleblockproperties.cpp:96)
         self.properties: dict[str, str] = {}
@@ -415,6 +451,25 @@ class Diagram:
                              font=font)
         self.tables.append(table)
         return table
+
+    def group_items(self, uuids: "list[str]") -> "set[str]":
+        """把一組 uuid 群組(QET 端:選一個=選整組、一起移動)。
+        已屬其他群組者先移出;不足兩個丟 ValueError。"""
+        ids = {u for u in uuids if u}
+        if len(ids) < 2:
+            raise ValueError("a group needs at least two members")
+        for g in self.groups:
+            g -= ids
+        self.groups = [g for g in self.groups if len(g) >= 2]
+        self.groups.append(ids)
+        return ids
+
+    def ungroup_items(self, uuids: "list[str]") -> int:
+        """解散含任一指定 uuid 的群組;回傳解散數。"""
+        ids = set(uuids)
+        before = len(self.groups)
+        self.groups = [g for g in self.groups if not (g & ids)]
+        return before - len(self.groups)
 
     def connect(self, t1: TerminalRef, t2: TerminalRef,
                 path: "list[tuple[str, float]] | None" = None,
@@ -492,6 +547,12 @@ class Diagram:
             dtables = ET.SubElement(d, "drawing_tables")
             for t in self.tables:
                 dtables.append(t.to_xml())
+        real_groups = [g for g in self.groups if len(g) >= 2]
+        if real_groups:
+            groups = ET.SubElement(d, "element_groups")
+            for g in real_groups:
+                ET.SubElement(groups, "group",
+                              {"uuids": ";".join(sorted(g))})
         for extra in self.extra_children:
             d.append(copy.deepcopy(extra))
         return d
@@ -639,10 +700,16 @@ class QetProject:
                      else dtables.findall("drawing_table")):
             d.tables.append(DrawingTable.from_xml(tdom))
 
+        egroups = ddom.find("element_groups")
+        for gdom in ([] if egroups is None else egroups.findall("group")):
+            ids = {u for u in gdom.get("uuids", "").split(";") if u}
+            if len(ids) >= 2:
+                d.groups.append(ids)
+
         # keep everything else (shapes, images, legacy tables…) verbatim —
         # dropping unmodelled nodes destroyed project data once (2026-07-08)
         modelled = {"properties", "elements", "conductors", "inputs",
-                    "drawing_tables"}
+                    "drawing_tables", "element_groups"}
         d.extra_children = [copy.deepcopy(child) for child in ddom
                             if child.tag not in modelled]
 

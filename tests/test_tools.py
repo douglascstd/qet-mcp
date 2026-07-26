@@ -184,6 +184,24 @@ class ToolChain(unittest.TestCase):
         server.tool_delete_table(0)
         self.assertEqual(len(server.tool_list_content()["tables"]), 0)
 
+    def test_merge_cells_and_group_tools(self):
+        server.tool_add_table(200, 200, 3, 3, data=[["表頭"]])
+        r = server.tool_merge_table_cells(0, 0, 0, 0, 2)
+        self.assertEqual(r["spans"], [[0, 0, 1, 3]])
+        server.tool_add_text(100, 80, "標題")
+        server.tool_place_element(CPI, 300, 400, label="-B9")
+        g = server.tool_group_items(["-B9", "text:標題", "table:0"])
+        self.assertEqual(g["grouped"], 3)
+        c = server.tool_list_content()
+        self.assertEqual(len(c["groups"]), 1)
+        self.assertEqual(len(c["groups"][0]), 3)
+        self.assertEqual(c["tables"][0]["spans"], [[0, 0, 1, 3]])
+        r = server.tool_unmerge_table_cells(0)
+        self.assertEqual(r["removed"], 1)
+        u = server.tool_ungroup_items("text:標題")
+        self.assertEqual(u["removed_groups"], 1)
+        self.assertEqual(server.tool_list_content()["groups"], [])
+
     def test_auto_docid_numbers_per_dcc(self):
         server.tool_add_diagram()                       # folio 1
         server.tool_add_diagram()                       # folio 2
