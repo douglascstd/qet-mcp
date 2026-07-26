@@ -106,12 +106,12 @@
     <elements />
     <conductors />
     <inputs>
-      <input x="120" y="90" text="1. 前言" rotation="0" uuid="{a4942a9e-b46b-435c-a6ac-8ac9dc6f24bd}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="90" text="1. 前言" rotation="0" uuid="{a4942a9e-b46b-435c-a6ac-8ac9dc6f24bd}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="140" text="前三部手冊建立命名系統:81346-1 代號怎麼組、81346-2 類別字母怎麼選、61355 文件怎麼編號。" rotation="0" uuid="{539afa66-1958-4ca1-9739-8b9221a603be}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="170" text="61082-1 是最後一塊拼圖:代號與符號落到圖紙時,版面怎麼編排、線怎麼畫、跨頁怎麼參照、讀圖的人怎麼追一條訊號。" rotation="0" uuid="{bd20657a-c660-4fa4-9094-b2dd37375e66}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="200" text="對設計者:圖要畫成什麼樣才合規、才好維護。對看圖者:座標、斜線、箭頭、成對代號是什麼意思。" rotation="0" uuid="{b869d375-9ea9-48ab-8c87-40f3e5edd400}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="230" text="現行版本 IEC 61082-1:2014(第 3 版):納入無線互連表示規則、補充代號標註位置例外。QET/EPLAN 的跨頁參照與接點鏡像實作的正是本標準。" rotation="0" uuid="{02ff7bd3-7424-4649-b188-f2160d5c97fc}" font="osifont,11,-1,5,50,0,0,0,0,0" />
-      <input x="120" y="300" text="1.3 標準的章節地圖" rotation="0" uuid="{138a407f-b18c-4e5a-b4d4-5a24fd1901bc}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="300" text="1.3 標準的章節地圖" rotation="0" uuid="{138a407f-b18c-4e5a-b4d4-5a24fd1901bc}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
     </inputs>
     <drawing_tables>
       <drawing_table uuid="{baa25677-4fc8-4f98-8e6c-5da045a9f354}" x="120" y="330" z="0" state="{&quot;rows&quot;:8,&quot;cols&quot;:3,&quot;row_height&quot;:26.0,&quot;widths&quot;:[160.0,700.0,160.0],&quot;cells&quot;:[&quot;61082-1 章節&quot;,&quot;內容&quot;,&quot;本手冊對應&quot;,&quot;第 4~5 章&quot;,&quot;文件編製原則與呈現規則(版面、線寬、符號、代號標註)&quot;,&quot;第 2 章&quot;,&quot;第 6 章&quot;,&quot;文件種類&quot;,&quot;第 3 章&quot;,&quot;第 7 章&quot;,&quot;簡圖類(概要圖、功能圖、電路圖)&quot;,&quot;第 3、4 章&quot;,&quot;第 8 章&quot;,&quot;圖類(佈置圖等)&quot;,&quot;第 3 章&quot;,&quot;第 9 章&quot;,&quot;表格類(接線表等)&quot;,&quot;第 3 章&quot;,&quot;第 10 章&quot;,&quot;圖表類(時序圖、順序圖)&quot;,&quot;第 3 章&quot;,&quot;第 11~12 章&quot;,&quot;結構化文件與 CAx 一致性&quot;,&quot;第 5、6 章&quot;],&quot;cell_bg&quot;:[&quot;#ffd9e2f3&quot;,&quot;#ffd9e2f3&quot;,&quot;#ffd9e2f3&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;],&quot;cell_halign&quot;:[4,4,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],&quot;cell_valign&quot;:[128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128,128],&quot;cell_size&quot;:[11,11,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}" />
@@ -166,16 +166,16 @@
     <elements />
     <conductors />
     <inputs>
-      <input x="120" y="80" text="2.1 圖紙與座標參照系統" rotation="0" uuid="{ce0570f5-f1b7-4b0e-a9ed-9a2bea8b4eff}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="80" text="2.1 圖紙與座標參照系統" rotation="0" uuid="{ce0570f5-f1b7-4b0e-a9ed-9a2bea8b4eff}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="125" text="・圖紙沿邊緣劃分參照格:縱向 A、B、C…由上而下,橫向 1、2、3…由左而右;任何位置都能以「字母+數字」描述,如 B4。" rotation="0" uuid="{89a27aff-a65d-4423-afad-0795802d928e}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="152" text="・格子大小以「一格容納一條電流路徑」為原則;許多公司直接以欄(column)為單位,一頁 8 或 10 欄。" rotation="0" uuid="{7ae79f40-78d0-4776-9132-eac25905a340}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="179" text="・座標框是圖框的一部分,隨圖框範本統一。文件識別(圖號、頁次、版次)寫在標題欄,欄位依 ISO 7200;文件代號採 61355 DCC(如 &amp;EFS)。" rotation="0" uuid="{9caf2c20-3085-4105-b400-0ae20e61d665}" font="osifont,11,-1,5,50,0,0,0,0,0" />
-      <input x="120" y="240" text="2.2 線條規則" rotation="0" uuid="{bd54657f-4aab-41ad-9585-506e6cc43a13}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
-      <input x="120" y="490" text="2.3 圖形符號的使用" rotation="0" uuid="{cec6cad7-5e4a-429c-81a5-7d85fd6bbd7b}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="240" text="2.2 線條規則" rotation="0" uuid="{bd54657f-4aab-41ad-9585-506e6cc43a13}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
+      <input x="120" y="490" text="2.3 圖形符號的使用" rotation="0" uuid="{cec6cad7-5e4a-429c-81a5-7d85fd6bbd7b}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="535" text="・符號取自 IEC 60617;60617 沒有的,依標準附錄的組構規則自行組合,並收入專案圖例頁。" rotation="0" uuid="{0a548616-9177-4ebc-83fc-2bb9e9bf4602}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="562" text="・符號可放大、旋轉、鏡射,但不得改變意義;比例與可讀性須維持。" rotation="0" uuid="{28fc7606-81db-49d0-923b-1acfa8aadaf6}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="589" text="・符號預設畫「未通電、未作動」狀態:接觸器接點常態、按鈕未按下、斷路器合閘前。讀圖的邏輯推演都從這個狀態出發。" rotation="0" uuid="{1fbd7f14-e07f-4dc6-a267-254b2e0f80cb}" font="osifont,11,-1,5,50,0,0,0,0,0" />
-      <input x="120" y="650" text="2.4 參考代號與端子代號的標註" rotation="0" uuid="{bb6957e5-37b8-4ea9-a0ee-6fb993f05413}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="650" text="2.4 參考代號與端子代號的標註" rotation="0" uuid="{bb6957e5-37b8-4ea9-a0ee-6fb993f05413}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="695" text="・參考代號標註於符號旁(慣例左方或上方),水平書寫、方向一致,例如 -QA2。" rotation="0" uuid="{e3c48bc3-1946-4447-9281-dc169f7d9ce8}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="722" text="・端子代號緊貼符號的連接點外側,如接觸器主接點的 1、2,線圈的 A1、A2——圖與實物必須一致。" rotation="0" uuid="{23f78b9b-0a23-4079-b269-61cc18a58533}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="749" text="・高階代號(=功能、+位置)宣告於圖框或區域框,元件旁只標差異部分(第一部手冊 7.2 節省略規則)。" rotation="0" uuid="{5c57a00f-8184-4ffc-8ae3-30523a9affed}" font="osifont,11,-1,5,50,0,0,0,0,0" />
@@ -233,7 +233,7 @@
     <elements />
     <conductors />
     <inputs>
-      <input x="120" y="80" text="3. 圖面種類與其分工" rotation="0" uuid="{fa2f744d-dd7b-4f68-be78-a093911fb729}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="80" text="3. 圖面種類與其分工" rotation="0" uuid="{fa2f744d-dd7b-4f68-be78-a093911fb729}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="125" text="61082-1 定義「詳細度遞增」的文件種類。設計由上而下依序產出;看圖相反——先概要圖建立全局,再進電路圖看細節。" rotation="0" uuid="{6113ebc4-e253-4103-97ad-34cb969c44dd}" font="osifont,11,-1,5,50,0,0,0,0,0" />
     </inputs>
     <drawing_tables>
@@ -290,14 +290,14 @@
     <elements />
     <conductors />
     <inputs>
-      <input x="120" y="80" text="4.1 訊號流向與版面佈局" rotation="0" uuid="{71bedeaf-3533-4fc9-8b9d-73a963bf2665}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="80" text="4.1 訊號流向與版面佈局" rotation="0" uuid="{71bedeaf-3533-4fc9-8b9d-73a963bf2665}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="125" text="・主流向:能量與訊號由左至右、由上至下。電源在上(或左)、負載在下(或右)。" rotation="0" uuid="{9457f60b-5a64-4f43-bad2-48a2b206e858}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="152" text="・電源軌:控制迴路以水平雙軌(上 L/下 N,或 +24V/0V)夾住中間的垂直電流路徑,形成階梯(ladder)版面。" rotation="0" uuid="{54789148-5428-402e-98fb-ab1943dba1f7}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="179" text="・電流路徑編欄:每條垂直路徑對應圖紙的一欄座標,一欄一件事(一個線圈、一個燈)。這讓「接點鏡像」能用欄號精準指位。" rotation="0" uuid="{95846c08-ee80-4a4f-ac6b-5a25700c2bb3}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="206" text="・功能分組:相關迴路相鄰擺放並以細鏈線框出功能群,框上標功能代號(=…),對應 81346 功能結構。" rotation="0" uuid="{72d3fe25-3233-498c-a2bf-38e227482f84}" font="osifont,11,-1,5,50,0,0,0,0,0" />
-      <input x="120" y="270" text="4.2 元件的集中表示與分散表示" rotation="0" uuid="{e341f503-ba91-4774-8d54-1a679a8b7dd4}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="270" text="4.2 元件的集中表示與分散表示" rotation="0" uuid="{e341f503-ba91-4774-8d54-1a679a8b7dd4}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="430" text="分散表示是現代圖面的常態——這正是「同代號=同一顆實體元件」是識圖第一鐵律的原因,也是為什麼需要接點鏡像。" rotation="0" uuid="{e2f54c5f-4a05-4587-9afa-ead1aab922d9}" font="osifont,11,-1,5,50,0,0,0,0,0" />
-      <input x="120" y="490" text="4.3 接點鏡像(線圈下的接點表)" rotation="0" uuid="{3eab1660-6c84-4ded-90de-136e870cc7d3}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="490" text="4.3 接點鏡像(線圈下的接點表)" rotation="0" uuid="{3eab1660-6c84-4ded-90de-136e870cc7d3}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="535" text="分散表示後,讀圖的人站在線圈旁會問:「這顆接觸器的接點都用到哪去了?」答案印在線圈符號正下方的接點鏡像:" rotation="0" uuid="{6a475ed5-9703-4b2f-bd4e-37eae22de864}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="640" text="・每一「行」代表一對接點:左邊是端子號,右邊是它出現的頁・欄座標。反向也成立:散落各處的接點旁,標著線圈所在座標——雙向都能追。" rotation="0" uuid="{eb0736cc-1e6b-4863-84d1-0e6a91af4f4d}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="667" text="・沒用到的接點在鏡像中留白或標示未用,維護加線時先看這裡找空接點。" rotation="0" uuid="{c02c7878-47f9-49a2-ad22-68311f01b4ee}" font="osifont,11,-1,5,50,0,0,0,0,0" />
@@ -357,14 +357,14 @@
     <elements />
     <conductors />
     <inputs>
-      <input x="120" y="80" text="5.1 交互參照的記法" rotation="0" uuid="{d6348746-36fe-40ac-becd-b5c7a2cfe172}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="80" text="5.1 交互參照的記法" rotation="0" uuid="{d6348746-36fe-40ac-becd-b5c7a2cfe172}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="125" text="通式是「文件/頁・座標」,由外而內逐層定位。全案同一種寫法,讀者不需要猜:" rotation="0" uuid="{dc4cf3be-0056-4bc3-a4be-18db1037380f}" font="osifont,11,-1,5,50,0,0,0,0,0" />
-      <input x="120" y="340" text="5.2 中斷點:訊號跨頁的成對箭頭" rotation="0" uuid="{4fb24289-f242-463c-ad28-4e0b8c7e8497}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="340" text="5.2 中斷點:訊號跨頁的成對箭頭" rotation="0" uuid="{4fb24289-f242-463c-ad28-4e0b8c7e8497}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="385" text="・去向端:空心箭頭+目的地座標,例如電位 L1 旁標 → /3.1(接續於第 3 頁第 1 欄)。" rotation="0" uuid="{a1e902c1-15af-4dbc-84b7-fae4ba6f5c54}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="412" text="・來向端:對應箭頭+來源座標,例如 /2.8 →(來自第 2 頁第 8 欄)。" rotation="0" uuid="{eed9df95-a9aa-4ba6-8c88-6b3d1388ea15}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="439" text="・識別文字:兩端必須掛同一個識別(電位名 L1、+24V,或訊號名 START_CMD)——箭頭靠這個字配對,不是靠位置。" rotation="0" uuid="{78de1564-a8c7-4bbe-a428-3403c6f133a1}" font="osifont,11,-1,5,50,0,0,0,0,0" />
       <input x="120" y="466" text="看圖要領:追到頁緣箭頭時,讀出識別文字與目的座標,翻頁後「找同名箭頭」續追。電源電位幾乎每頁都有中斷點,屬於背景;真正要小心的是控制訊號的中斷點。" rotation="0" uuid="{0f0e710b-f777-4868-9bbb-39cc5166dc46}" font="osifont,11,-1,5,50,0,0,0,0,0" />
-      <input x="120" y="530" text="6. 讀懂一套 61082 風格的圖:七步" rotation="0" uuid="{21db3fd3-6826-4984-bcd7-fa6938adb2e4}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="530" text="6. 讀懂一套 61082 風格的圖:七步" rotation="0" uuid="{21db3fd3-6826-4984-bcd7-fa6938adb2e4}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
     </inputs>
     <drawing_tables>
       <drawing_table uuid="{b202541a-6dba-4b12-8b27-d6e35078d3b0}" x="120" y="160" z="0" state="{&quot;rows&quot;:5,&quot;cols&quot;:3,&quot;row_height&quot;:26.0,&quot;widths&quot;:[200.0,260.0,800.0],&quot;cells&quot;:[&quot;記法&quot;,&quot;例&quot;,&quot;解讀&quot;,&quot;頁・欄&quot;,&quot;/8.6&quot;,&quot;本文件第 8 頁第 6 欄&quot;,&quot;頁/列欄&quot;,&quot;12/B4&quot;,&quot;本文件第 12 頁座標 B4&quot;,&quot;圖號/頁・欄&quot;,&quot;01/2.C&quot;,&quot;第 01 號圖第 2 頁 C 欄(跨文件)&quot;,&quot;文件代號+座標&quot;,&quot;&amp;EFS002/5.3&quot;,&quot;第 2 份迴路圖第 5 頁第 3 欄(完整寫法)&quot;],&quot;cell_bg&quot;:[&quot;#ffd9e2f3&quot;,&quot;#ffd9e2f3&quot;,&quot;#ffd9e2f3&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;],&quot;cell_halign&quot;:[4,4,4,1,1,1,1,1,1,1,1,1,1,1,1],&quot;cell_valign&quot;:[128,128,128,128,128,128,128,128,128,128,128,128,128,128,128],&quot;cell_size&quot;:[11,11,11,0,0,0,0,0,0,0,0,0,0,0,0]}" />
@@ -437,7 +437,7 @@
           <elementInformation show="1" name="label">-QA2</elementInformation>
         </elementInformations>
         <dynamic_texts>
-          <dynamic_elmt_text x="40" y="-12.5" z="12" text_width="-1" Halignment="AlignLeft" Valignment="AlignTop" frame="false" rotation="0" keep_visual_rotation="false" text_from="ElementInfo" uuid="{09f7899c-cca2-4054-b94e-cc2cecb579dc}" font="Liberation Sans,9,-1,5,50,0,0,0,0,0,Regular">
+          <dynamic_elmt_text x="40" y="-30.5" z="12" text_width="-1" Halignment="AlignLeft" Valignment="AlignTop" frame="false" rotation="0" keep_visual_rotation="false" text_from="ElementInfo" uuid="{09f7899c-cca2-4054-b94e-cc2cecb579dc}" font="Liberation Sans,9,-1,5,50,0,0,0,0,0,Regular">
             <text>-QA2</text>
             <info_name>label</info_name>
           </dynamic_elmt_text>
@@ -495,7 +495,7 @@
           <elementInformation show="1" name="label">-QA2</elementInformation>
         </elementInformations>
         <dynamic_texts>
-          <dynamic_elmt_text x="2.75" y="-9.5" z="2" text_width="-1" Halignment="AlignLeft" Valignment="AlignTop" frame="false" rotation="0" keep_visual_rotation="false" text_from="ElementInfo" uuid="{96c55078-0961-4b62-a8e1-7ed042d3d688}" font="Liberation Sans,9,-1,5,50,0,0,0,0,0,Regular">
+          <dynamic_elmt_text x="2.75" y="-27.5" z="2" text_width="-1" Halignment="AlignLeft" Valignment="AlignTop" frame="false" rotation="0" keep_visual_rotation="false" text_from="ElementInfo" uuid="{96c55078-0961-4b62-a8e1-7ed042d3d688}" font="Liberation Sans,9,-1,5,50,0,0,0,0,0,Regular">
             <text>-QA2</text>
             <info_name>label</info_name>
           </dynamic_elmt_text>
@@ -537,7 +537,7 @@
           <elementInformation show="1" name="label">-QA2</elementInformation>
         </elementInformations>
         <dynamic_texts>
-          <dynamic_elmt_text x="2.75" y="-9.5" z="2" text_width="-1" Halignment="AlignLeft" Valignment="AlignTop" frame="false" rotation="0" keep_visual_rotation="false" text_from="ElementInfo" uuid="{69b5f226-e93c-453c-9dff-78c4baa765af}" font="Liberation Sans,9,-1,5,50,0,0,0,0,0,Regular">
+          <dynamic_elmt_text x="2.75" y="-27.5" z="2" text_width="-1" Halignment="AlignLeft" Valignment="AlignTop" frame="false" rotation="0" keep_visual_rotation="false" text_from="ElementInfo" uuid="{69b5f226-e93c-453c-9dff-78c4baa765af}" font="Liberation Sans,9,-1,5,50,0,0,0,0,0,Regular">
             <text>-QA2</text>
             <info_name>label</info_name>
           </dynamic_elmt_text>
@@ -563,7 +563,7 @@
       <conductor element1="{51729d02-eb51-41c5-bd83-56b5cd8d3760}" terminal1="{c5376fd7-bdf1-4c10-985a-0d7d5f52c8f9}" element2="{a848c47b-fab1-4a9a-8251-a51ffc710f26}" terminal2="{40fe89f2-f4f2-4cc1-9b77-5fc8dc2d0142}" type="multi" num="N" color="#000000" condsize="1" displaytext="1" x="0" y="0" freezeLabel="false" />
     </conductors>
     <inputs>
-      <input x="120" y="70" text="7.1 示意圖:直入起動(DOL)迴路——元件庫實繪" rotation="0" uuid="{e8870c2f-5583-457f-a7d8-a75bc5f42319}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="70" text="7.1 示意圖:直入起動(DOL)迴路——元件庫實繪" rotation="0" uuid="{e8870c2f-5583-457f-a7d8-a75bc5f42319}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="110" text="左:動力迴路(粗線區)。右:控制迴路(階梯)。-QA2 線圈與主接點分散表示、共用代號,線圈下方由 QET 自動產生接點鏡像。" rotation="0" uuid="{f7199edb-7861-47bf-a0a9-495b1536a7ab}" font="osifont,10,-1,5,50,0,0,0,0,0" />
       <input x="292" y="218" text="L1" rotation="0" uuid="{7ca2215b-1993-443d-b019-e449efc2989e}" font="osifont,10,-1,5,75,0,0,0,0,0" />
       <input x="332" y="218" text="L2" rotation="0" uuid="{8bf27fcb-c19b-408a-9679-2a5c3099a726}" font="osifont,10,-1,5,75,0,0,0,0,0" />
@@ -628,10 +628,10 @@
     <elements />
     <conductors />
     <inputs>
-      <input x="120" y="80" text="7.2 情境二:跨頁追一條訊號(站 2 接觸器不吸)" rotation="0" uuid="{85d4c29d-88d2-448a-8488-4aa9e9bb1e2a}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
-      <input x="120" y="300" text="7.3 情境三:同一條線的三種文件(馬達 U 相)" rotation="0" uuid="{36ec0d83-d0df-4ef4-8e33-8f6b0f8ab289}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="80" text="7.2 情境二:跨頁追一條訊號(站 2 接觸器不吸)" rotation="0" uuid="{85d4c29d-88d2-448a-8488-4aa9e9bb1e2a}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
+      <input x="120" y="300" text="7.3 情境三:同一條線的三種文件(馬達 U 相)" rotation="0" uuid="{36ec0d83-d0df-4ef4-8e33-8f6b0f8ab289}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="120" y="470" text="三份文件靠同一套 81346 代號互相鎖定:電路圖知道要找 -QA2:2 → 端子圖知道它走 -X1:2 與 -W1 → 佈置圖知道人該站在盤的哪一側。" rotation="0" uuid="{0c7c51f5-acd7-4463-b492-571470a0b7ea}" font="osifont,11,-1,5,50,0,0,0,0,0" />
-      <input x="120" y="530" text="8. 常見問答(精選)" rotation="0" uuid="{9e5d8fa1-baf1-461a-9aad-b6546816a548}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="530" text="8. 常見問答(精選)" rotation="0" uuid="{9e5d8fa1-baf1-461a-9aad-b6546816a548}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
     </inputs>
     <drawing_tables>
       <drawing_table uuid="{f3fa216c-86e5-4d49-abf4-d41dc1934b48}" x="120" y="110" z="0" state="{&quot;rows&quot;:5,&quot;cols&quot;:2,&quot;row_height&quot;:26.0,&quot;widths&quot;:[80.0,1180.0],&quot;cells&quot;:[&quot;步驟&quot;,&quot;動作&quot;,&quot;1&quot;,&quot;第 8 頁第 4 欄找到 -QA2 線圈,上游是安全繼電器 -KF3 的接點,接點旁標 /6.2&quot;,&quot;2&quot;,&quot;翻第 6 頁第 2 欄:-KF3 線圈迴路串著急停鏈,迴路起點是中斷點箭頭 ESTOP_CH1 /5.8 →&quot;,&quot;3&quot;,&quot;翻第 5 頁第 8 欄:同名箭頭 ESTOP_CH1 → /6.2,上游是站 1 的急停按鈕 =H1=H10-SF9&quot;,&quot;4&quot;,&quot;結論:站 1 的急停未復歸。全程三次跳轉,每一步都由座標與識別文字導航&quot;],&quot;cell_bg&quot;:[&quot;#ffd9e2f3&quot;,&quot;#ffd9e2f3&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;],&quot;cell_halign&quot;:[4,4,1,1,1,1,1,1,1,1],&quot;cell_valign&quot;:[128,128,128,128,128,128,128,128,128,128],&quot;cell_size&quot;:[11,11,0,0,0,0,0,0,0,0]}" />
@@ -688,8 +688,8 @@
     <elements />
     <conductors />
     <inputs>
-      <input x="120" y="80" text="附錄 A:記法速查表" rotation="0" uuid="{cd29663f-5b82-4be9-a549-8f37a0fafbec}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
-      <input x="720" y="490" text="附錄 B:參考資料" rotation="0" uuid="{da365198-8c59-46b0-853f-afa7837a70bf}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2e86de" />
+      <input x="120" y="80" text="附錄 A:記法速查表" rotation="0" uuid="{cd29663f-5b82-4be9-a549-8f37a0fafbec}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
+      <input x="720" y="490" text="附錄 B:參考資料" rotation="0" uuid="{da365198-8c59-46b0-853f-afa7837a70bf}" font="osifont,15,-1,5,75,0,0,0,0,0" badge_bg="#2f8f5b" />
       <input x="720" y="535" text="1. IEC 61082-1:2014, Preparation of documents used in electrotechnology — Part 1: Rules" rotation="0" uuid="{e7c1b97f-c632-4838-8033-1782f671a519}" font="osifont,10,-1,5,50,0,0,0,0,0" />
       <input x="720" y="560" text="2. IEC 60617, Graphical symbols for diagrams(線上資料庫)" rotation="0" uuid="{8debd9c7-c4a9-4af9-a3e3-ae77d52e6c6e}" font="osifont,10,-1,5,50,0,0,0,0,0" />
       <input x="720" y="585" text="3. IEC 81346-1:2022、IEC 81346-2:2019、IEC 61355-1:2008(本系列第一~三部手冊)" rotation="0" uuid="{b7efd141-146e-4adc-9b48-d15681d15ed9}" font="osifont,10,-1,5,50,0,0,0,0,0" />
