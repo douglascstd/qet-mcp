@@ -212,6 +212,51 @@ class BuildFromScratch(unittest.TestCase):
             self.assertEqual(md.ungroup_items([t1.uuid]), 1)
             self.assertEqual(md.groups, [])
 
+    def test_gui_saved_nodes_survive_roundtrip_and_relabel(self):
+        """GUI 存的專案:元件 <inputs>/<properties>/<texts_groups>/多筆
+        elementInformation、z、導線 <sequentialNumbers>、分類 <names>
+        都要原樣保留;改代號要連同群組內文字與 autonum formula 一起改。"""
+        root = ET.parse(GOLDEN).getroot()
+        e = root.find("diagram/elements/element")
+        e.set("z", "16")
+        ET.SubElement(e, "properties").append(
+            ET.Element("property", {"name": "x"}))
+        infos = e.find("elementInformations")
+        for name, text in (("manufacturer", "WEG"), ("formula", "%id%prefix")):
+            ET.SubElement(infos, "elementInformation",
+                          {"name": name, "show": "1"}).text = text
+        group = ET.SubElement(e.find("texts_groups"), "texts_group")
+        dt = ET.SubElement(group, "dynamic_elmt_text")
+        ET.SubElement(dt, "text").text = "old"
+        ET.SubElement(dt, "info_name").text = "label"
+        seq = root.find("diagram/conductors/conductor/sequentialNumbers")
+        ET.SubElement(seq, "unit", {"value": "7"})
+        ET.SubElement(root.find("collection/category"), "names").append(
+            ET.Element("name", {"lang": "pt"}))
+        with tempfile.TemporaryDirectory() as tmp:
+            src, out = Path(tmp) / "gui.qet", Path(tmp) / "out.qet"
+            ET.ElementTree(root).write(src, encoding="utf-8")
+            prj = QetProject.open(src)
+            inst = next(i for i in prj.diagram(0).elements
+                        if i.uuid == e.get("uuid"))
+            inst.set_label("-K9")
+            prj.save(out)
+            saved = ET.parse(out).getroot()
+        se = next(x for x in saved.iter("element")
+                  if x.get("uuid") == e.get("uuid"))
+        self.assertEqual(se.get("z"), "16")
+        self.assertIsNotNone(se.find("terminals"))
+        self.assertIsNotNone(se.find("properties/property"))
+        got = {i.get("name"): i.text for i in se.iter("elementInformation")}
+        self.assertEqual(got["manufacturer"], "WEG")
+        self.assertEqual(got["label"], "-K9")
+        self.assertEqual(got["formula"], "-K9")
+        self.assertEqual(se.findtext("texts_groups/texts_group/"
+                                     "dynamic_elmt_text/text"), "-K9")
+        self.assertIsNotNone(saved.find(
+            "diagram/conductors/conductor/sequentialNumbers/unit"))
+        self.assertIsNotNone(saved.find("collection/category/names/name"))
+
     def test_terminal_lookup(self):
         defn = ElementDefinition.load(CPI)
         self.assertEqual(defn.terminal("1").uuid, CPI_TERM_1)
