@@ -693,7 +693,7 @@ def _resolve_titleblock(template: str = "") -> Path:
 
 def tool_apply_titleblock(title: str = "", doc_id: str = "",
                           subtitle: str = "", doc_type: str = "",
-                          doc_status: str = "正式發行 Released",
+                          doc_status: str = "Released",
                           author: str = "", indexrev: str = "A",
                           date: str = "", techref: str = "",
                           checked_by: str = "", approved_by: str = "",
@@ -783,22 +783,22 @@ def tool_check_iec_compliance(folio: int = 0) -> dict:
         label = e.label.strip()
         if not label:
             add("MUST", "81346-label", e.uuid,
-                f"元件 {e.definition.embed_path} 無代號")
+                f"element {e.definition.embed_path} has no designation")
             continue
         if not label.startswith("-"):
-            add("MUST", "81346-prefix", label, f"代號 {label} 缺少產品面前綴 '-'")
+            add("MUST", "81346-prefix", label, f"designation {label} lacks the product-aspect prefix '-'")
         m = _LABEL_RE.match(label)
         if not m:
             add("MUST", "81346-format", label,
-                f"代號 {label} 不符 -<類別字母><序號> 格式")
+                f"designation {label} does not match the -<class letter><number> format")
             continue
         letters, num = m.group(1), int(m.group(2))
         if letters in forbidden:
             add("MUST", "81346-abbrev", label,
-                f"代號 {label} 使用禁用縮寫(JIS/JIC),應改用 IEC 類別字母")
+                f"designation {label} uses a forbidden (JIS/JIC) abbreviation; use an IEC class letter")
         elif letters[0] not in valid:
             add("MUST", "81346-category", label,
-                f"代號 {label} 類別字母 '{letters[0]}' 不在 IEC 81346 類別表")
+                f"designation {label}: class letter '{letters[0]}' is not in the IEC 81346 class table")
         else:
             by_category.setdefault(letters, []).append(num)
 
@@ -809,14 +809,14 @@ def tool_check_iec_compliance(folio: int = 0) -> dict:
         expected = set(range(1, max(nums) + 1))
         for gap in sorted(expected - set(nums)):
             add("SHOULD", "81346-sequence", f"-{letters}",
-                f"類別 -{letters} 序號跳號(缺 {gap})")
+                f"class -{letters} numbering has a gap (missing {gap})")
 
     # R3 — every conductor must carry a wire number (both ends)
     for c in d.conductors:
         if not str(c.props.get("num", "")).strip():
             add("MUST", "60204-wirenum",
                 f"{c.props.get('num','')}@{c.element1[:8]}",
-                "導線未標線號(等電位編號,兩端皆須)")
+                "conductor has no wire number (equipotential number required at both ends)")
 
     # R4 — dangling terminals (element terminals with no conductor)
     used: "dict[str, set]" = {}
@@ -828,14 +828,14 @@ def tool_check_iec_compliance(folio: int = 0) -> dict:
         free = total - used.get(e.uuid, set())
         if free:
             add("SHOULD", "connectivity-dangling", e.label or e.uuid,
-                f"{e.label or '元件'} 有 {len(free)}/{len(total)} 個端子未接線")
+                f"{e.label or 'element'} has {len(free)}/{len(total)} unconnected terminals")
 
     # R5 — control conductors should not all be plain black
     colors = {str(c.props.get("color", "#000000")).upper()
               for c in d.conductors}
     if d.conductors and colors == {"#000000"}:
         add("SHOULD", "60204-color",
-            "(all)", "全部導線為黑色;控制迴路應依迴路類型上色(AC紅/DC藍…)")
+            "(all)", "all conductors are black; colour control circuits by type (AC red / DC blue …)")
 
     levels = {"MUST": 0, "SHOULD": 0}
     for f in findings:
@@ -1025,16 +1025,16 @@ TOOLS = {
         "project; returns its index.",
         _schema({"title": S}, [])),
     "qet_set_folio_title": (
-        tool_set_folio_title, "Set ONE folio's per-page title (分頁圖名 / "
-        "%title), its document category/DCC (文件類別 / %doc-type, e.g. "
-        "'&EFS 電路圖'), and/or its document id (文件識別號 / %doc-id). Use "
+        tool_set_folio_title, "Set ONE folio's per-page title (%title), its document "
+        "category/DCC (%doc-type, e.g. '&EFS Circuit diagram'), and/or its "
+        "document id (%doc-id). Use "
         "for multi-folio packages where each sheet differs (qet_apply_"
         "titleblock fills all folios identically). Set title+doc_type per "
         "page, then call qet_auto_docid to number the doc-ids.",
         _schema({"folio": I, "title": S, "doc_type": S, "doc_id": S},
                 ["folio"])),
     "qet_auto_docid": (
-        tool_auto_docid, "Regenerate every folio's 文件識別號 (%doc-id) from "
+        tool_auto_docid, "Regenerate every folio's document id (%doc-id) from "
         "the project number + each folio's DCC (%doc-type): "
         "<project_no>-<DCC>-nn, nn counting per DCC in folio order. Folios "
         "with no DCC (cover) get just the project number. Idempotent — re-run "

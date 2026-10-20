@@ -121,15 +121,36 @@ class ElementInstance:
         # so user-moved texts survive a round-trip); None = generate from
         # the definition's templates
         self.dynamic_texts_dom = dynamic_texts_dom
+        # the whole <element> node of a QET-saved file: attributes (z,
+        # freezeLabel…) and children we don't model (<terminals>, <inputs>,
+        # <properties>, <texts_groups>, extra <elementInformation>s) are
+        # written back verbatim — a GUI-made project lost them all otherwise
+        self.raw_dom: ET.Element | None = None
 
     def terminal(self, key: str | int) -> TerminalRef:
         return TerminalRef(self.uuid, self.definition.terminal(key))
 
     def set_label(self, label: str) -> None:
-        """Change the designation; drop any preserved dynamic-text DOM so
-        the label is re-materialized (otherwise the old text would show)."""
+        """Change the designation.  Preserved label texts (dynamic texts,
+        also those inside <texts_groups>) are rewritten in place so the
+        user's layout survives; without preserved texts they are
+        re-materialized from the definition."""
         self.label = label
-        self.dynamic_texts_dom = None
+        holders = [] if self.dynamic_texts_dom is None else [self.dynamic_texts_dom]
+        if self.raw_dom is not None:
+            holders += self.raw_dom.findall("texts_groups")
+            # QET recomputes the label from an autonum formula on load
+            # (e.g. "%id%prefix%sequ"); a literal formula keeps ours
+            for info in self.raw_dom.iter("elementInformation"):
+                if info.get("name") == "formula" and info.text:
+                    info.text = label
+        for holder in holders:
+            for t in holder.iter("dynamic_elmt_text"):
+                if t.findtext("info_name") == "label":
+                    text = t.find("text")
+                    if text is None:
+                        text = ET.SubElement(t, "text")
+                    text.text = label
 
     def _materialize_dynamic_texts(self) -> ET.Element:
         """Instantiate the definition's dynamic_text templates.
@@ -151,6 +172,8 @@ class ElementInstance:
         return wrapper
 
     def to_xml(self) -> ET.Element:
+        if self.raw_dom is not None:
+            return self._to_xml_preserved()
         e = ET.Element("element", {
             "uuid": self.uuid,
             "type": f"embed://{self.definition.embed_path}",
@@ -173,6 +196,59 @@ class ElementInstance:
             e.append(self._materialize_dynamic_texts())
         return e
 
+    # QET's child order inside <element>
+    _CHILD_ORDER = ("terminals", "inputs", "links_uuids", "elementInformations",
+                    "properties", "dynamic_texts", "texts_groups")
+
+    def _to_xml_preserved(self) -> ET.Element:
+        """Re-emit the original node, patching only what we model."""
+        e = copy.deepcopy(self.raw_dom)
+        e.attrib.update({
+            "uuid": self.uuid,
+            "type": f"embed://{self.definition.embed_path}",
+            "x": _num(self.x), "y": _num(self.y),
+            "orientation": str(self.orientation), "prefix": self.prefix,
+        })
+
+        def put(node: ET.Element) -> None:
+            """Replace the same-tag child, or insert at QET's position."""
+            old = e.find(node.tag)
+            if old is not None:
+                e.insert(list(e).index(old), node)
+                e.remove(old)
+                return
+            rank = self._CHILD_ORDER.index(node.tag)
+            pos = sum(1 for c in e if c.tag in self._CHILD_ORDER[:rank])
+            e.insert(pos, node)
+
+        if self.links:
+            links_dom = ET.Element("links_uuids")
+            for master_uuid in self.links:
+                ET.SubElement(links_dom, "link_uuid", {"uuid": master_uuid})
+            put(links_dom)
+        elif e.find("links_uuids") is not None:
+            e.remove(e.find("links_uuids"))
+
+        infos = e.find("elementInformations")
+        if infos is None and self.label:
+            infos = ET.Element("elementInformations")
+            put(infos)
+        if infos is not None:
+            info = next((i for i in infos.findall("elementInformation")
+                         if i.get("name") == "label"), None)
+            if self.label:
+                if info is None:
+                    info = ET.SubElement(infos, "elementInformation",
+                                         {"show": "1", "name": "label"})
+                info.text = self.label
+            elif info is not None:
+                infos.remove(info)
+
+        put(copy.deepcopy(self.dynamic_texts_dom)
+            if self.dynamic_texts_dom is not None
+            else self._materialize_dynamic_texts())
+        return e
+
 
 class Conductor:
     #: attributes QET always writes; provided so our output opens cleanly
@@ -191,6 +267,9 @@ class Conductor:
         # delta within 1px, else QET falls back to autorouting)
         self.path = path
         self.props = {**self.DEFAULTS, **{k: str(v) for k, v in props.items()}}
+        # unmodelled children of a QET-saved conductor (<sequentialNumbers>
+        # holds the autonum state), written back verbatim
+        self.extra_children: list[ET.Element] = []
 
     def to_xml(self) -> ET.Element:
         # Without explicit path we emit NO <segment> children: QET
@@ -206,6 +285,8 @@ class Conductor:
                                 else "vertical"),
                 "length": _num(length),
             })
+        for extra in self.extra_children:
+            e.append(copy.deepcopy(extra))
         return e
 
 
@@ -575,6 +656,9 @@ class QetProject:
         # (new-folio defaults, autonum rules live in <newdiagrams>)
         self.extra_root_children: list[ET.Element] = []
         self.extra_root_attrs: dict[str, str] = {}
+        # <names> (display names) of collection categories, by category
+        # path ("import/", "import/sub/"), kept so the GUI tree keeps them
+        self.category_names: dict[str, ET.Element] = {}
 
     # -- construction -------------------------------------------------------
     @classmethod
@@ -646,7 +730,11 @@ class QetProject:
 
     def _read_collection(self, node: ET.Element, prefix: str) -> None:
         for cat in node.findall("category"):
-            self._read_collection(cat, f"{prefix}{cat.get('name', '')}/")
+            path = f"{prefix}{cat.get('name', '')}/"
+            names = cat.find("names")
+            if names is not None:
+                self.category_names[path] = copy.deepcopy(names)
+            self._read_collection(cat, path)
         for holder in node.findall("element"):
             ddom = holder.find("definition")
             if ddom is None:
@@ -690,6 +778,7 @@ class QetProject:
                                    if dtexts is not None else None),
                 links=[u for u in links if u],
             ))
+            d.elements[-1].raw_dom = copy.deepcopy(edom)
 
         inputs = ddom.find("inputs")
         for tdom in ([] if inputs is None else inputs.findall("input")):
@@ -727,6 +816,8 @@ class QetProject:
             c.props = {k: v for k, v in cdom.attrib.items()
                        if k not in ("element1", "terminal1",
                                     "element2", "terminal2")}
+            c.extra_children = [copy.deepcopy(x) for x in cdom
+                                if x.tag != "segment"]
             d.conductors.append(c)
 
     def to_xml(self) -> ET.Element:
@@ -747,15 +838,21 @@ class QetProject:
         # QET requires the "import" root category even when empty:
         # without it, element integration (cross-project paste, drag &
         # drop into the project) fails on the QET side.
-        ET.SubElement(collection, "category", {"name": "import"})
+        imp = ET.SubElement(collection, "category", {"name": "import"})
+        if "import/" in self.category_names:
+            imp.append(copy.deepcopy(self.category_names["import/"]))
         for embed_path in sorted(self.collection):
             node = collection
             *dirs, filename = embed_path.split("/")
+            cat_path = ""
             for name in dirs:  # build/reuse category chain
+                cat_path += f"{name}/"
                 nxt = next((c for c in node.findall("category")
                             if c.get("name") == name), None)
                 if nxt is None:
                     nxt = ET.SubElement(node, "category", {"name": name})
+                    if cat_path in self.category_names:
+                        nxt.append(copy.deepcopy(self.category_names[cat_path]))
                 node = nxt
             holder = ET.SubElement(node, "element", {"name": filename})
             holder.append(copy.deepcopy(self.collection[embed_path].dom))
