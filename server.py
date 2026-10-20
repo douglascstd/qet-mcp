@@ -85,8 +85,16 @@ def _run_cli(*args: str) -> dict:
     proc = subprocess.run(
         [str(QET_BINARY), *args],
         capture_output=True, text=True, timeout=180)
+    out = proc.stdout
     try:
-        return json.loads(proc.stdout)
+        return json.loads(out)
+    except json.JSONDecodeError:
+        pass
+    # the QET build prints debug chatter (element loading…) on stdout
+    # before the report: parse from the last line that opens a JSON object
+    start = out.rfind("\n{")
+    try:
+        return json.loads(out[start + 1:] if start >= 0 else out)
     except json.JSONDecodeError:
         raise RuntimeError(
             f"qet-cli produced no JSON (exit {proc.returncode}): "
